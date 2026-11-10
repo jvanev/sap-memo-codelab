@@ -13,4 +13,5 @@
     <string name="memo_description">Description</string>
     <string name="google_map_normal">Switch to normal map view</string>
     <string name="google_map_satellite">Switch to satellite map view</string>
+    <string name="notification_channel_name">Memo</string>
 </resources>
