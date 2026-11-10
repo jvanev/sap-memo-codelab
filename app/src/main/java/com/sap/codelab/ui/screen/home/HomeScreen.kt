@@ -22,13 +22,17 @@ import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -129,34 +133,58 @@ fun HomeScreen(
 }
 
 @Composable
-private fun MemoDetails(memo: Memo, onClick: () -> Unit, modifier: Modifier = Modifier) {
+private fun MemoDetails(
+    memo: Memo,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val dimens = LocalDimens.current
+    val dismissBoxState = rememberSwipeToDismissBoxState()
 
-    Surface(onClick = onClick, modifier = modifier) {
-        Row(
-            modifier = Modifier
-                .padding(all = dimens.paddingMedium)
-                .fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(space = dimens.spacingMedium),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            MemoCircle {
-                Text(text = memo.title.take(1))
+    SwipeToDismissBox(
+        state = dismissBoxState,
+        backgroundContent = {
+            val color = if (dismissBoxState.dismissDirection == SwipeToDismissBoxValue.StartToEnd) {
+                Color.Green
+            } else {
+                Color.Red
             }
-            Column(verticalArrangement = Arrangement.spacedBy(space = dimens.spacingExtraSmall)) {
-                Text(
-                    text = memo.title,
-                    overflow = TextOverflow.Ellipsis,
-                    maxLines = 1,
-                    style = MaterialTheme.typography.titleLarge,
-                )
-                Text(
-                    text = memo.description,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    overflow = TextOverflow.Ellipsis,
-                    maxLines = 2,
-                    style = MaterialTheme.typography.bodyMedium,
-                )
+
+            Box(
+                modifier = Modifier
+                    .background(color = color)
+                    .fillMaxSize(),
+            )
+        },
+    ) {
+        Surface(onClick = onClick, modifier = modifier) {
+            Row(
+                modifier = Modifier
+                    .padding(all = dimens.paddingMedium)
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(space = dimens.spacingMedium),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                MemoCircle {
+                    Text(text = memo.title.take(1))
+                }
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(space = dimens.spacingExtraSmall),
+                ) {
+                    Text(
+                        text = memo.title,
+                        overflow = TextOverflow.Ellipsis,
+                        maxLines = 1,
+                        style = MaterialTheme.typography.titleLarge,
+                    )
+                    Text(
+                        text = memo.description,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        overflow = TextOverflow.Ellipsis,
+                        maxLines = 2,
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                }
             }
         }
     }
