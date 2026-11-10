@@ -15,4 +15,10 @@ data class HomeUiState(
      * Whether to show all stored memos, or only memos not marked as "done".
      */
     val showsAllMemos: Boolean = false,
+
+    /**
+     * Holds the recently performed action, or `null` if no action was performed or
+     * the action has expired and has been cleared.
+     */
+    val undoableAction: UndoableMemoAction? = null,
 )

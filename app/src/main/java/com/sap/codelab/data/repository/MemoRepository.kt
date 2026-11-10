@@ -30,17 +30,12 @@ interface MemoRepository {
     suspend fun saveMemo(memo: Memo): Long
 
     /**
-     * Removes the specified [memo].
+     * Stores the specified [memos].
      */
-    suspend fun removeMemo(memo: Memo)
+    suspend fun saveMemos(memos: List<Memo>)
 
     /**
      * Removes the specified [memos].
      */
-    suspend fun removeMemo(memos: List<Memo>)
-
-    /**
-     * Removes the [Memo] with the specified [id].
-     */
-    suspend fun removeMemo(id: Long)
+    suspend fun removeMemos(memos: List<Memo>)
 }

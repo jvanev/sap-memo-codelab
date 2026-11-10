@@ -4,6 +4,11 @@
     <string name="show_all">SHOW ALL</string>
     <string name="show_open">SHOW OPEN</string>
     <string name="memo_list_empty">Start creating new memos</string>
+    <string name="memo_closed">The memo has been closed</string>
+    <string name="mamo_reopen">The memo has been reopened</string>
+    <string name="memo_removed">The memo has been removed</string>
+    <string name="memo_restored">The memo has been restored</string>
+    <string name="undo_action">UNDO</string>
     <string name="create_memo">Create new memo</string>
     <string name="return_to_home">Return to home screen</string>
     <string name="edit_memo">Edit Memo</string>

@@ -15,14 +15,21 @@ interface MemoDao {
     /**
      * @return All memos currently stored in the database.
      */
-    @Query("SELECT * FROM memos ORDER BY id ASC")
+    @Query("SELECT * FROM memos WHERE is_removed = 0 ORDER BY id ASC")
     fun getAll(): Flow<List<Memo>>
 
     /**
      * @return All memos currently stored in the database that have not yet been marked as "done".
      */
-    @Query("SELECT * FROM memos WHERE is_done = 0 ORDER BY id ASC")
+    @Query("SELECT * FROM memos WHERE is_done = 0 AND is_removed = 0 ORDER BY id ASC")
     fun getOpen(): Flow<List<Memo>>
+
+    /**
+     * @return The memo whose [Memo.id] matches the specified [id],
+     *         or `null` if a memo with that id doesn't exist.
+     */
+    @Query("SELECT * FROM memos WHERE id = :id")
+    suspend fun getMemoById(id: Long): Memo?
 
     /**
      * Stores the details of the specified [memo] into the database.
@@ -36,27 +43,17 @@ interface MemoDao {
     suspend fun upsert(memo: Memo): Long
 
     /**
-     * Deletes the specified [memo] from the database.
+     * Stores the details of the specified [memos] into the database.
+     *
+     * If a memo already exists, its details will be updated,
+     * otherwise a new database entry will be created.
      */
-    @Delete
-    suspend fun delete(memo: Memo)
+    @Upsert
+    suspend fun upsert(memos: List<Memo>)
 
     /**
      * Deletes the specified [memos] from the database.
      */
     @Delete
     suspend fun delete(memos: List<Memo>)
-
-    /**
-     * Deletes the [Memo] with the specified [id] from the database.
-     */
-    @Query("DELETE FROM memos WHERE id = :id")
-    suspend fun delete(id: Long)
-
-    /**
-     * @return The memo whose [Memo.id] matches the specified [id],
-     *         or `null` if a memo with that id doesn't exist.
-     */
-    @Query("SELECT * FROM memos WHERE id = :id")
-    suspend fun getMemoById(id: Long): Memo?
 }

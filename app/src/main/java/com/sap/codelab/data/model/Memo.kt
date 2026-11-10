@@ -17,6 +17,7 @@ data class Memo(
     @ColumnInfo(name = "reminder_latitude") val reminderLatitude: Double = INVALID_COORDINATES,
     @ColumnInfo(name = "reminder_longitude") val reminderLongitude: Double = INVALID_COORDINATES,
     @ColumnInfo(name = "is_done") val isDone: Boolean = false,
+    @ColumnInfo(name = "is_removed") val isRemoved: Boolean = false,
 ) {
     /**
      * Whether this memo's data is valid.

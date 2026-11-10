@@ -29,11 +29,17 @@ object MemoRepositoryImpl : MemoRepository {
         return database.memoDao().upsert(memo)
     }
 
-    override suspend fun removeMemo(memo: Memo) = database.memoDao().delete(memo)
+    override suspend fun saveMemos(memos: List<Memo>) {
+        for (memo in memos) {
+            if (!memo.isValid) {
+                throw IllegalStateException("An invalid memo reached the repository layer: $memo")
+            }
+        }
 
-    override suspend fun removeMemo(memos: List<Memo>) = database.memoDao().delete(memos)
+        database.memoDao().upsert(memos)
+    }
 
-    override suspend fun removeMemo(id: Long) = database.memoDao().delete(id)
+    override suspend fun removeMemos(memos: List<Memo>) = database.memoDao().delete(memos)
 
     /**
      * Initializes this repository.
