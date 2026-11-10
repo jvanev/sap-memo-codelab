@@ -3,6 +3,7 @@ package com.sap.codelab.ui.screen
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
@@ -11,6 +12,7 @@ import androidx.navigation3.ui.NavDisplay
 import com.sap.codelab.ui.navigation.NavigationScreen
 import com.sap.codelab.ui.screen.home.HomeScreen
 import com.sap.codelab.ui.screen.memo.MemoScreen
+import com.sap.codelab.ui.screen.memo.MemoViewModel
 
 @Composable
 fun SAPMemoScreen() {
@@ -26,14 +28,18 @@ fun SAPMemoScreen() {
         entryProvider = entryProvider {
             entry<NavigationScreen.Home> {
                 HomeScreen(
-                    navigateToMemo = { memoId ->
-                        backStack.add(NavigationScreen.Memo(memoId))
+                    viewModel = viewModel(),
+                    onNavigateToMemo = { launchMode ->
+                        backStack.add(NavigationScreen.Memo(launchMode))
                     },
                 )
             }
 
-            entry<NavigationScreen.Memo> {
-                MemoScreen(navigateBack = backStack::removeLastOrNull)
+            entry<NavigationScreen.Memo> { destination ->
+                MemoScreen(
+                    viewModel = viewModel { MemoViewModel(launchMode = destination.launchMode) },
+                    onNavigateBack = backStack::removeLastOrNull,
+                )
             }
         },
     )

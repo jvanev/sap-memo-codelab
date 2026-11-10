@@ -1,5 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">SAP Memo</string>
+    <string name="show_all">SHOW ALL</string>
+    <string name="show_open">SHOW OPEN</string>
+    <string name="create_memo">Create new memo</string>
+    <string name="memo_list_empty">Start creating new memos</string>
     <string name="return_to_home">Return to home screen</string>
+    <string name="edit_memo">Edit Memo</string>
+    <string name="new_memo">New Memo</string>
+    <string name="save">SAVE</string>
 </resources>

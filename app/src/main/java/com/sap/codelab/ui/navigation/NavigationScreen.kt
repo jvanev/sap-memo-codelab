@@ -1,6 +1,7 @@
 package com.sap.codelab.ui.navigation
 
 import androidx.navigation3.runtime.NavKey
+import com.sap.codelab.ui.screen.memo.MemoLaunchMode
 import kotlinx.serialization.Serializable
 
 /**
@@ -15,10 +16,9 @@ sealed interface NavigationScreen : NavKey {
     data object Home : NavigationScreen
 
     /**
-     * Represents the screen for creating a new, or displaying the details of an existing [Memo].
-     *
-     * If no [memoId] is specified, the user will be able to create a new memo.
+     * Represents the screen for creating a new, or displaying the details of an existing [Memo],
+     * depending on the specified [launchMode].
      */
     @Serializable
-    data class Memo(val memoId: Long = 0) : NavigationScreen
+    data class Memo(val launchMode: MemoLaunchMode) : NavigationScreen
 }
