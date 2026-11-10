@@ -42,7 +42,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -52,6 +51,8 @@ import com.sap.codelab.R
 import com.sap.codelab.data.model.Memo
 import com.sap.codelab.ui.component.SAPMemoTopAppBar
 import com.sap.codelab.ui.screen.memo.MemoLaunchMode
+import com.sap.codelab.ui.theme.DarkGreen
+import com.sap.codelab.ui.theme.DarkRed
 import com.sap.codelab.ui.theme.LocalDimens
 import com.sap.codelab.ui.theme.sapTopAppBarTextButtonColors
 import kotlinx.coroutines.launch
@@ -162,7 +163,7 @@ fun HomeScreen(
                 contentPadding = PaddingValues(vertical = dimens.paddingMedium),
             ) {
                 items(items = uiState.memos, key = { it.id }) { memo ->
-                    MemoDetails(
+                    MemoContainer(
                         memo = memo,
                         onClick = { onNavigateToMemo(memo.id) },
                         onClose = { onCloseMemo(memo) },
@@ -236,7 +237,7 @@ private suspend fun showUndoableActionSnackbar(
 }
 
 @Composable
-private fun MemoDetails(
+private fun MemoContainer(
     memo: Memo,
     onClick: () -> Unit,
     onClose: () -> Unit,
@@ -244,7 +245,6 @@ private fun MemoDetails(
     modifier: Modifier = Modifier,
 ) {
     val coroutineScope = rememberCoroutineScope()
-    val dimens = LocalDimens.current
     val swipeState = rememberSwipeToDismissBoxState()
     var surfaceVisible by remember { mutableStateOf(true) }
 
@@ -252,9 +252,9 @@ private fun MemoDetails(
         state = swipeState,
         backgroundContent = {
             val color = if (swipeState.dismissDirection == SwipeToDismissBoxValue.StartToEnd) {
-                Color.Green
+                DarkGreen
             } else {
-                Color.Red
+                DarkRed
             }
 
             Box(
@@ -277,36 +277,44 @@ private fun MemoDetails(
                 }
             }
         },
-    ) {
-        Surface(onClick = onClick) {
-            Row(
-                modifier = Modifier
-                    .padding(all = dimens.paddingMedium)
-                    .fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(space = dimens.spacingMedium),
-                verticalAlignment = Alignment.CenterVertically,
+        content = {
+            MemoBody(memo = memo, onClick = onClick)
+        },
+    )
+}
+
+@Composable
+private fun MemoBody(memo: Memo, onClick: () -> Unit) {
+    val dimens = LocalDimens.current
+
+    Surface(onClick = onClick) {
+        Row(
+            modifier = Modifier
+                .padding(all = dimens.paddingMedium)
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(space = dimens.spacingMedium),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            MemoCircle {
+                Text(text = memo.title.take(1))
+            }
+            Column(
+                verticalArrangement = Arrangement
+                    .spacedBy(space = dimens.spacingExtraSmall),
             ) {
-                MemoCircle {
-                    Text(text = memo.title.take(1))
-                }
-                Column(
-                    verticalArrangement = Arrangement
-                        .spacedBy(space = dimens.spacingExtraSmall),
-                ) {
-                    Text(
-                        text = memo.title,
-                        overflow = TextOverflow.Ellipsis,
-                        maxLines = 1,
-                        style = MaterialTheme.typography.titleLarge,
-                    )
-                    Text(
-                        text = memo.description,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        overflow = TextOverflow.Ellipsis,
-                        maxLines = 2,
-                        style = MaterialTheme.typography.bodyMedium,
-                    )
-                }
+                Text(
+                    text = memo.title,
+                    overflow = TextOverflow.Ellipsis,
+                    maxLines = 1,
+                    style = MaterialTheme.typography.titleLarge,
+                )
+                Text(
+                    text = memo.description,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    overflow = TextOverflow.Ellipsis,
+                    maxLines = 2,
+                    style = MaterialTheme.typography.bodyMedium,
+                )
             }
         }
     }
