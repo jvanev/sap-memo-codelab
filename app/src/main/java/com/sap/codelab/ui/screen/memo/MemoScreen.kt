@@ -1,5 +1,6 @@
 package com.sap.codelab.ui.screen.memo
 
+import android.Manifest
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -33,6 +34,7 @@ import androidx.compose.material3.ripple
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
@@ -47,12 +49,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.LatLng
@@ -68,6 +74,7 @@ import com.sap.codelab.ui.component.SAPMemoTopAppBar
 import com.sap.codelab.ui.theme.LocalDimens
 import com.sap.codelab.ui.theme.LocalWindowWidthSizeClass
 import com.sap.codelab.ui.theme.sapTopAppBarTextButtonColors
+import com.sap.codelab.util.isPermissionGranted
 
 @Composable
 fun MemoScreen(viewModel: MemoViewModel, onNavigateBack: () -> Unit) {
@@ -91,6 +98,8 @@ fun MemoScreen(
     onSubmitMemo: (String, String, Double, Double) -> Unit,
     onNavigateBack: () -> Unit,
 ) {
+    val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
     val resources = LocalResources.current
     val focusManager = LocalFocusManager.current
     val snackbarHostState = remember { SnackbarHostState() }
@@ -100,6 +109,19 @@ fun MemoScreen(
     )
     var errorMessageRes by remember { mutableStateOf<Int?>(null) }
 
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                val granted = context.isPermissionGranted(Manifest.permission.ACCESS_FINE_LOCATION)
+                memoFormState.onPermissionStateChange(granted)
+            }
+        }
+
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
     LaunchedEffect(errorMessageRes) {
         errorMessageRes?.let { res ->
             snackbarHostState.showSnackbar(resources.getString(res))
@@ -425,17 +447,19 @@ private class MemoFormState(
         private set
 
     /**
-     * Holds the current state of the marker in the GoogleMaps composable.
+     * Holds the current state of the marker in the GoogleMap composable.
      */
     var memoMarker by mutableStateOf<MarkerState?>(memoPosition?.let { MarkerState(it) })
         private set
 
+    var hasLocationPermission by mutableStateOf(false)
+        private set
+
+    /**
+     * Holds the current properties of the GoogleMap composable.
+     */
     var mapProperties by mutableStateOf(
-        MapProperties(
-            isBuildingEnabled = true,
-            isMyLocationEnabled = true,
-            mapType = MapType.NORMAL,
-        ),
+        MapProperties(isBuildingEnabled = true, mapType = MapType.NORMAL),
     )
         private set
 
@@ -472,6 +496,20 @@ private class MemoFormState(
      */
     fun onPositionChange(position: LatLng) {
         memoMarker = MarkerState(position)
+    }
+
+    /**
+     * Updates the UI according the specified [granted] flag.
+     */
+    fun onPermissionStateChange(granted: Boolean) {
+        if (granted != hasLocationPermission) {
+            hasLocationPermission = granted
+            mapProperties = MapProperties(
+                isBuildingEnabled = true,
+                isMyLocationEnabled = granted,
+                mapType = MapType.NORMAL,
+            )
+        }
     }
 
     /**
