@@ -8,6 +8,8 @@ import androidx.compose.ui.unit.Dp
  */
 data class Dimens(
     val paddingMedium: Dp = Dp.Unspecified,
+    val spacingExtraSmall: Dp = Dp.Unspecified,
+    val spacingSmall: Dp = Dp.Unspecified,
     val spacingMedium: Dp = Dp.Unspecified,
 )
 

@@ -8,15 +8,17 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Error
-import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
@@ -27,7 +29,6 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.ripple
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
@@ -63,8 +64,10 @@ import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.sap.codelab.R
 import com.sap.codelab.data.model.Memo
+import com.sap.codelab.ui.component.SAPMemoTopAppBar
 import com.sap.codelab.ui.theme.LocalDimens
 import com.sap.codelab.ui.theme.LocalWindowWidthSizeClass
+import com.sap.codelab.ui.theme.sapTopAppBarTextButtonColors
 
 @Composable
 fun MemoScreen(viewModel: MemoViewModel, onNavigateBack: () -> Unit) {
@@ -82,7 +85,6 @@ fun MemoScreen(viewModel: MemoViewModel, onNavigateBack: () -> Unit) {
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MemoScreen(
     uiState: MemoUiState,
@@ -112,7 +114,7 @@ fun MemoScreen(
             detectTapGestures { focusManager.clearFocus() }
         },
         topBar = {
-            TopAppBar(
+            SAPMemoTopAppBar(
                 title = {
                     val stringRes = if (uiState.isEditing) {
                         R.string.edit_memo
@@ -153,6 +155,7 @@ fun MemoScreen(
                                 }
                             }
                         },
+                        colors = ButtonDefaults.sapTopAppBarTextButtonColors(),
                     ) {
                         Text(text = stringResource(id = R.string.save))
                     }
@@ -163,10 +166,13 @@ fun MemoScreen(
             SnackbarHost(hostState = snackbarHostState)
         },
     ) { innerPadding ->
+        val dimens = LocalDimens.current
+
         MemoForm(
             state = memoFormState,
             modifier = Modifier
                 .padding(paddingValues = innerPadding)
+                .padding(all = dimens.paddingMedium)
                 .fillMaxSize(),
         )
     }
@@ -191,12 +197,36 @@ private fun PortraitMobileScreenMemoForm(state: MemoFormState, modifier: Modifie
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(space = dimens.spacingMedium),
     ) {
+        MemoFormFields(state = state, modifier = Modifier.height(intrinsicSize = IntrinsicSize.Min))
+        MemoMap(state = state, modifier = Modifier.weight(weight = 1f))
+    }
+}
+
+@Composable
+private fun LandscapeMobileScreenMemoForm(state: MemoFormState, modifier: Modifier = Modifier) {
+    val dimens = LocalDimens.current
+
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(space = dimens.spacingMedium),
+    ) {
+        MemoMap(state = state, modifier = Modifier.weight(weight = 3f))
+        MemoFormFields(state = state, modifier = Modifier.weight(weight = 2f))
+    }
+}
+
+@Composable
+private fun MemoFormFields(state: MemoFormState, modifier: Modifier = Modifier) {
+    val dimens = LocalDimens.current
+
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(space = dimens.spacingMedium),
+    ) {
         TextField(
             value = state.memoTitle,
             onValueChange = state::onMemoTitleChange,
-            modifier = Modifier
-                .padding(horizontal = dimens.paddingMedium)
-                .fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth(),
             label = {
                 Text(text = stringResource(id = R.string.memo_title))
             },
@@ -213,9 +243,7 @@ private fun PortraitMobileScreenMemoForm(state: MemoFormState, modifier: Modifie
         TextField(
             value = state.memoDescription,
             onValueChange = state::onMemoDescriptionChange,
-            modifier = Modifier
-                .padding(horizontal = dimens.paddingMedium)
-                .fillMaxWidth(),
+            modifier = Modifier.fillMaxSize(),
             label = {
                 Text(text = stringResource(id = R.string.memo_description))
             },
@@ -230,97 +258,14 @@ private fun PortraitMobileScreenMemoForm(state: MemoFormState, modifier: Modifie
             maxLines = MemoFormState.MEMO_DESCRIPTION_FIELD_LINES,
             minLines = MemoFormState.MEMO_DESCRIPTION_FIELD_LINES,
         )
-        MemoMap(
-            markerState = state.memoMarker,
-            shouldMoveToMarkerPosition = state.shouldMoveMapCameraToMemo,
-            onMapClick = state::onPositionChange,
-            properties = state.mapProperties,
-            onToggleMapType = state::toggleMapType,
-            modifier = Modifier
-                .weight(weight = 1f)
-                .padding(horizontal = dimens.paddingMedium)
-                .padding(bottom = dimens.paddingMedium),
-        )
     }
 }
 
 @Composable
-private fun LandscapeMobileScreenMemoForm(state: MemoFormState, modifier: Modifier = Modifier) {
-    val dimens = LocalDimens.current
-
-    Row(
-        modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(space = dimens.spacingMedium),
-    ) {
-        MemoMap(
-            markerState = state.memoMarker,
-            shouldMoveToMarkerPosition = state.shouldMoveMapCameraToMemo,
-            onMapClick = state::onPositionChange,
-            properties = state.mapProperties,
-            onToggleMapType = state::toggleMapType,
-            modifier = Modifier
-                .weight(weight = 3f)
-                .padding(horizontal = dimens.paddingMedium)
-                .padding(bottom = dimens.paddingMedium),
-        )
-        Column(
-            modifier = Modifier.weight(weight = 2f),
-            verticalArrangement = Arrangement.spacedBy(space = dimens.spacingMedium),
-        ) {
-            TextField(
-                value = state.memoTitle,
-                onValueChange = state::onMemoTitleChange,
-                modifier = Modifier
-                    .padding(horizontal = dimens.paddingMedium)
-                    .fillMaxWidth(),
-                label = {
-                    Text(text = stringResource(id = R.string.memo_title))
-                },
-                trailingIcon = if (state.isMemoTitleInvalid) {
-                    @Composable {
-                        Icon(imageVector = Icons.Rounded.Error, contentDescription = null)
-                    }
-                } else {
-                    null
-                },
-                isError = state.isMemoTitleInvalid,
-                singleLine = true,
-            )
-            TextField(
-                value = state.memoDescription,
-                onValueChange = state::onMemoDescriptionChange,
-                modifier = Modifier
-                    .padding(horizontal = dimens.paddingMedium)
-                    .padding(bottom = dimens.paddingMedium)
-                    .fillMaxSize(),
-                label = {
-                    Text(text = stringResource(id = R.string.memo_description))
-                },
-                trailingIcon = if (state.isMemoDescriptionInvalid) {
-                    @Composable {
-                        Icon(imageVector = Icons.Rounded.Error, contentDescription = null)
-                    }
-                } else {
-                    null
-                },
-                isError = state.isMemoDescriptionInvalid,
-            )
-        }
-    }
-}
-
-@Composable
-private fun MemoMap(
-    markerState: MarkerState?,
-    shouldMoveToMarkerPosition: Boolean,
-    onMapClick: (LatLng) -> Unit,
-    properties: MapProperties,
-    onToggleMapType: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+private fun MemoMap(state: MemoFormState, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier.then(
-            other = if (markerState == null) {
+            other = if (state.memoMarker == null) {
                 Modifier
                     .border(
                         width = 2.dp,
@@ -338,9 +283,11 @@ private fun MemoMap(
         // due to the additional zooming that needs to be performed
         val cameraMoved = rememberSaveable { mutableStateOf(false) }
 
-        LaunchedEffect(markerState, shouldMoveToMarkerPosition) {
+        LaunchedEffect(state.memoMarker, state.shouldMoveMapCameraToMemo) {
+            val markerState = state.memoMarker
+
             if (markerState != null) {
-                if (shouldMoveToMarkerPosition && !cameraMoved.value) {
+                if (state.shouldMoveMapCameraToMemo && !cameraMoved.value) {
                     cameraPositionState
                         .move(
                             CameraUpdateFactory
@@ -355,16 +302,16 @@ private fun MemoMap(
         GoogleMap(
             modifier = Modifier.clip(MaterialTheme.shapes.extraSmall),
             cameraPositionState = cameraPositionState,
-            properties = properties,
-            onMapClick = onMapClick,
+            properties = state.mapProperties,
+            onMapClick = state::onPositionChange,
         ) {
-            markerState?.let { marker -> Marker(marker) }
+            state.memoMarker?.let { marker -> Marker(marker) }
         }
         MapTypeButton(
-            onClick = onToggleMapType,
-            modifier = Modifier.padding(start = 11.dp, top = 11.dp),
+            onClick = state::toggleMapType,
+            modifier = Modifier.padding(start = MapTypeButtonOffset, top = MapTypeButtonOffset),
         ) {
-            val isNormalMap = properties.mapType == MapType.NORMAL
+            val isNormalMap = state.mapProperties.mapType == MapType.NORMAL
 
             Icon(
                 painter = painterResource(
@@ -381,7 +328,7 @@ private fun MemoMap(
                         R.string.google_map_normal
                     },
                 ),
-                modifier = Modifier.size(size = 24.dp),
+                modifier = Modifier.size(size = MapTypeButtonIconSize),
             )
         }
     }
@@ -428,7 +375,9 @@ private fun MapTypeButton(
     }
 }
 
+private val MapTypeButtonOffset = 11.dp
 private val MapTypeButtonSize = 39.dp
+private val MapTypeButtonIconSize = 24.dp
 private val MapTypeButtonIconColor = Color(color = 0xFF666666)
 private val MapTypeButtonBackgroundColor = Color.White.copy(alpha = 0.8f)
 private val MapTypeButtonBorderColor = Color.Gray.copy(alpha = 0.2f)

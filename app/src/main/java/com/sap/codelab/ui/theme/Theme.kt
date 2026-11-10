@@ -8,16 +8,22 @@ import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
 private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
+    primary = Orange,
+    onPrimary = Color.White,
+    primaryContainer = Orange,
+    onPrimaryContainer = Color.White,
     secondary = PurpleGrey40,
     tertiary = Pink40,
 )
 
 private val CompactSizeDimens = Dimens(
     paddingMedium = 16.dp,
+    spacingExtraSmall = 4.dp,
+    spacingSmall = 8.dp,
     spacingMedium = 16.dp,
 )
 
