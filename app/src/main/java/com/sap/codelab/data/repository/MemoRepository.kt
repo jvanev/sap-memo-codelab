@@ -20,17 +20,27 @@ interface MemoRepository {
     /**
      * @return The [Memo] with the specified [id], or `null` if no memo with that id exists.
      */
-    fun getMemoById(id: Int): Memo?
+    suspend fun getMemoById(id: Long): Memo?
 
     /**
      * Stores the specified [memo].
      *
      * @return The [Memo.id] of the specified [memo].
      */
-    fun saveMemo(memo: Memo): Int
+    suspend fun saveMemo(memo: Memo): Long
+
+    /**
+     * Removes the specified [memo].
+     */
+    suspend fun removeMemo(memo: Memo)
+
+    /**
+     * Removes the specified [memos].
+     */
+    suspend fun removeMemo(memos: List<Memo>)
 
     /**
      * Removes the [Memo] with the specified [id].
      */
-    fun removeMemo(id: Int)
+    suspend fun removeMemo(id: Long)
 }

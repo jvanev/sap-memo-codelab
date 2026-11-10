@@ -15,12 +15,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.Error
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
@@ -29,6 +32,7 @@ import androidx.compose.material3.ripple
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -43,17 +47,20 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapType
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
+import com.google.maps.android.compose.rememberCameraPositionState
 import com.sap.codelab.R
 import com.sap.codelab.data.model.Memo
 import com.sap.codelab.ui.theme.LocalDimens
@@ -63,6 +70,11 @@ import com.sap.codelab.ui.theme.LocalWindowWidthSizeClass
 fun MemoScreen(viewModel: MemoViewModel, onNavigateBack: () -> Unit) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
+    LaunchedEffect(uiState.isSaved) {
+        if (uiState.isSaved) {
+            onNavigateBack()
+        }
+    }
     MemoScreen(
         uiState = uiState,
         onSubmitMemo = viewModel::onSaveMemo,
@@ -77,9 +89,21 @@ fun MemoScreen(
     onSubmitMemo: (String, String, Double, Double) -> Unit,
     onNavigateBack: () -> Unit,
 ) {
+    val resources = LocalResources.current
     val focusManager = LocalFocusManager.current
-    val memoFormState = rememberMemoFormState(uiState.memo)
+    val snackbarHostState = remember { SnackbarHostState() }
+    val memoFormState = rememberMemoFormState(
+        memo = uiState.memo,
+        shouldMoveMapCameraToMemo = uiState.isInitialized && uiState.isEditing,
+    )
+    var errorMessageRes by remember { mutableStateOf<Int?>(null) }
 
+    LaunchedEffect(errorMessageRes) {
+        errorMessageRes?.let { res ->
+            snackbarHostState.showSnackbar(resources.getString(res))
+            errorMessageRes = null
+        }
+    }
     Scaffold(
         modifier = Modifier.pointerInput(key1 = Unit) {
             // Clear the focus when the user taps anywhere outside a composable
@@ -109,17 +133,24 @@ fun MemoScreen(
                 actions = {
                     TextButton(
                         onClick = {
-                            val position = memoFormState.memoMarker?.position
-
-                            if (position != null) {
-                                onSubmitMemo(
-                                    memoFormState.memoTitle,
-                                    memoFormState.memoDescription,
-                                    position.latitude,
-                                    position.longitude,
-                                )
+                            if (memoFormState.isMemoDataValid()) {
+                                memoFormState.memoMarker?.position?.let { position ->
+                                    onSubmitMemo(
+                                        memoFormState.memoTitle,
+                                        memoFormState.memoDescription,
+                                        position.latitude,
+                                        position.longitude,
+                                    )
+                                }
                             } else {
-                                // TODO: Display an error
+                                errorMessageRes = when {
+                                    memoFormState.isMemoTitleInvalid -> R.string.memo_title_missing
+
+                                    memoFormState.isMemoDescriptionInvalid ->
+                                        R.string.memo_description_missing
+
+                                    else -> R.string.memo_location_missing
+                                }
                             }
                         },
                     ) {
@@ -127,6 +158,9 @@ fun MemoScreen(
                     }
                 },
             )
+        },
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState)
         },
     ) { innerPadding ->
         MemoForm(
@@ -166,6 +200,14 @@ private fun PortraitMobileScreenMemoForm(state: MemoFormState, modifier: Modifie
             label = {
                 Text(text = stringResource(id = R.string.memo_title))
             },
+            trailingIcon = if (state.isMemoTitleInvalid) {
+                @Composable {
+                    Icon(imageVector = Icons.Rounded.Error, contentDescription = null)
+                }
+            } else {
+                null
+            },
+            isError = state.isMemoTitleInvalid,
             singleLine = true,
         )
         TextField(
@@ -177,11 +219,20 @@ private fun PortraitMobileScreenMemoForm(state: MemoFormState, modifier: Modifie
             label = {
                 Text(text = stringResource(id = R.string.memo_description))
             },
+            trailingIcon = if (state.isMemoDescriptionInvalid) {
+                @Composable {
+                    Icon(imageVector = Icons.Rounded.Error, contentDescription = null)
+                }
+            } else {
+                null
+            },
+            isError = state.isMemoDescriptionInvalid,
             maxLines = MemoFormState.MEMO_DESCRIPTION_FIELD_LINES,
             minLines = MemoFormState.MEMO_DESCRIPTION_FIELD_LINES,
         )
         MemoMap(
             markerState = state.memoMarker,
+            shouldMoveToMarkerPosition = state.shouldMoveMapCameraToMemo,
             onMapClick = state::onPositionChange,
             properties = state.mapProperties,
             onToggleMapType = state::toggleMapType,
@@ -203,6 +254,7 @@ private fun LandscapeMobileScreenMemoForm(state: MemoFormState, modifier: Modifi
     ) {
         MemoMap(
             markerState = state.memoMarker,
+            shouldMoveToMarkerPosition = state.shouldMoveMapCameraToMemo,
             onMapClick = state::onPositionChange,
             properties = state.mapProperties,
             onToggleMapType = state::toggleMapType,
@@ -224,6 +276,14 @@ private fun LandscapeMobileScreenMemoForm(state: MemoFormState, modifier: Modifi
                 label = {
                     Text(text = stringResource(id = R.string.memo_title))
                 },
+                trailingIcon = if (state.isMemoTitleInvalid) {
+                    @Composable {
+                        Icon(imageVector = Icons.Rounded.Error, contentDescription = null)
+                    }
+                } else {
+                    null
+                },
+                isError = state.isMemoTitleInvalid,
                 singleLine = true,
             )
             TextField(
@@ -236,6 +296,14 @@ private fun LandscapeMobileScreenMemoForm(state: MemoFormState, modifier: Modifi
                 label = {
                     Text(text = stringResource(id = R.string.memo_description))
                 },
+                trailingIcon = if (state.isMemoDescriptionInvalid) {
+                    @Composable {
+                        Icon(imageVector = Icons.Rounded.Error, contentDescription = null)
+                    }
+                } else {
+                    null
+                },
+                isError = state.isMemoDescriptionInvalid,
             )
         }
     }
@@ -244,14 +312,49 @@ private fun LandscapeMobileScreenMemoForm(state: MemoFormState, modifier: Modifi
 @Composable
 private fun MemoMap(
     markerState: MarkerState?,
+    shouldMoveToMarkerPosition: Boolean,
     onMapClick: (LatLng) -> Unit,
     properties: MapProperties,
     onToggleMapType: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Box(modifier = modifier) {
+    Box(
+        modifier = modifier.then(
+            other = if (markerState == null) {
+                Modifier
+                    .border(
+                        width = 2.dp,
+                        color = MaterialTheme.colorScheme.error,
+                        shape = MaterialTheme.shapes.extraSmall,
+                    )
+            } else {
+                Modifier
+            },
+        ),
+    ) {
+        val cameraPositionState = rememberCameraPositionState()
+        // Track the first movement of the camera. The camera should be moved only
+        // on the very first non-default UI state, and only if we are editing an existing memo,
+        // due to the additional zooming that needs to be performed
+        val cameraMoved = rememberSaveable { mutableStateOf(false) }
+
+        LaunchedEffect(markerState, shouldMoveToMarkerPosition) {
+            if (markerState != null) {
+                if (shouldMoveToMarkerPosition && !cameraMoved.value) {
+                    cameraPositionState
+                        .move(
+                            CameraUpdateFactory
+                                .newLatLngZoom(markerState.position, INITIAL_MAP_ZOOM),
+                        )
+                    cameraMoved.value = true
+                } else {
+                    cameraPositionState.animate(CameraUpdateFactory.newLatLng(markerState.position))
+                }
+            }
+        }
         GoogleMap(
             modifier = Modifier.clip(MaterialTheme.shapes.extraSmall),
+            cameraPositionState = cameraPositionState,
             properties = properties,
             onMapClick = onMapClick,
         ) {
@@ -283,6 +386,11 @@ private fun MemoMap(
         }
     }
 }
+
+/**
+ * The initial zoom at the current memo position, right after the state is initialized.
+ */
+private const val INITIAL_MAP_ZOOM = 15f
 
 /**
  * A button with a similar style to the buttons of GoogleMaps.
@@ -326,9 +434,9 @@ private val MapTypeButtonBackgroundColor = Color.White.copy(alpha = 0.8f)
 private val MapTypeButtonBorderColor = Color.Gray.copy(alpha = 0.2f)
 
 @Composable
-private fun rememberMemoFormState(memo: Memo): MemoFormState {
-    return rememberSaveable(memo, saver = MemoFormState.Saver) {
-        MemoFormState(memo)
+private fun rememberMemoFormState(memo: Memo, shouldMoveMapCameraToMemo: Boolean): MemoFormState {
+    return rememberSaveable(memo, shouldMoveMapCameraToMemo, saver = MemoFormState.Saver) {
+        MemoFormState(memo, shouldMoveMapCameraToMemo)
     }
 }
 
@@ -337,6 +445,11 @@ private class MemoFormState(
     memoTitle: String,
     memoDescription: String,
     memoPosition: LatLng?,
+
+    /**
+     * Whether the camera should move to and zoom at the marker's position.
+     */
+    val shouldMoveMapCameraToMemo: Boolean,
 ) {
     /**
      * Holds the current value of the memo title field.
@@ -413,9 +526,14 @@ private class MemoFormState(
     }
 
     /**
+     * @return `true` if the form contains valid memo data, `false` otherwise.
+     */
+    fun isMemoDataValid() = !isMemoTitleInvalid && !isMemoDescriptionInvalid && memoMarker != null
+
+    /**
      * Creates a new MemoFormState using the data of the specified [memo].
      */
-    constructor(memo: Memo) : this(
+    constructor(memo: Memo, shouldMoveToMarkerPosition: Boolean) : this(
         memoTitle = memo.title,
         memoDescription = memo.description,
         memoPosition = if (memo.isValidReminderPosition) {
@@ -423,6 +541,7 @@ private class MemoFormState(
         } else {
             null
         },
+        shouldMoveMapCameraToMemo = shouldMoveToMarkerPosition,
     )
 
     companion object {
@@ -443,6 +562,7 @@ private class MemoFormState(
                     memoTitle = it[0] as String,
                     memoDescription = it[1] as String,
                     memoPosition = it[2] as? LatLng,
+                    shouldMoveMapCameraToMemo = false,
                 )
             },
         )

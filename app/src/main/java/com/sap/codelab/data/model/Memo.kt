@@ -19,6 +19,12 @@ data class Memo(
     @ColumnInfo(name = "is_done") val isDone: Boolean = false,
 ) {
     /**
+     * Whether this memo's data is valid.
+     */
+    val isValid
+        get() = title.isNotEmpty() && description.isNotEmpty() && isValidReminderPosition
+
+    /**
      * Whether this memo's coordinates are valid.
      */
     val isValidReminderPosition

@@ -48,9 +48,15 @@ interface MemoDao {
     suspend fun delete(memos: List<Memo>)
 
     /**
+     * Deletes the [Memo] with the specified [id] from the database.
+     */
+    @Query("DELETE FROM memos WHERE id = :id")
+    suspend fun delete(id: Long)
+
+    /**
      * @return The memo whose [Memo.id] matches the specified [id],
      *         or `null` if a memo with that id doesn't exist.
      */
     @Query("SELECT * FROM memos WHERE id = :id")
-    suspend fun getMemoById(id: Int): Memo?
+    suspend fun getMemoById(id: Long): Memo?
 }

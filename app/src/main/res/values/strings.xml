@@ -13,5 +13,8 @@
     <string name="memo_description">Description</string>
     <string name="google_map_normal">Switch to normal map view</string>
     <string name="google_map_satellite">Switch to satellite map view</string>
+    <string name="memo_title_missing">Enter a title for your memo</string>
+    <string name="memo_description_missing">Enter a description for your memo</string>
+    <string name="memo_location_missing">Select a location for your memo</string>
     <string name="notification_channel_name">Memo</string>
 </resources>

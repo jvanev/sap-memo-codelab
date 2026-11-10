@@ -3,10 +3,12 @@ package com.sap.codelab
 import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import com.sap.codelab.data.repository.impl.MemoRepositoryImpl
 
 class SAPMemo : Application() {
     override fun onCreate() {
         super.onCreate()
+        MemoRepositoryImpl.initialize(this)
 
         getSystemService(NotificationManager::class.java)
             .createNotificationChannel(
