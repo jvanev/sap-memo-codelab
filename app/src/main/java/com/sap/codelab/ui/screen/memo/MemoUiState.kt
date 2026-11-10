@@ -9,14 +9,7 @@ data class MemoUiState(
     /**
      * The memo the details of which are displayed on the screen.
      */
-    val memo: Memo = Memo(
-        id = 0,
-        title = "",
-        description = "",
-        reminderDate = 0,
-        reminderLatitude = Double.NEGATIVE_INFINITY,
-        reminderLongitude = Double.NEGATIVE_INFINITY,
-    ),
+    val memo: Memo = Memo(),
 
     /**
      * Whether the [memo] is to be edited, or we're creating a new memo.

@@ -3,10 +3,14 @@
     <string name="app_name">SAP Memo</string>
     <string name="show_all">SHOW ALL</string>
     <string name="show_open">SHOW OPEN</string>
-    <string name="create_memo">Create new memo</string>
     <string name="memo_list_empty">Start creating new memos</string>
+    <string name="create_memo">Create new memo</string>
     <string name="return_to_home">Return to home screen</string>
     <string name="edit_memo">Edit Memo</string>
     <string name="new_memo">New Memo</string>
     <string name="save">SAVE</string>
+    <string name="memo_title">Title</string>
+    <string name="memo_description">Description</string>
+    <string name="google_map_normal">Switch to normal map view</string>
+    <string name="google_map_satellite">Switch to satellite map view</string>
 </resources>
