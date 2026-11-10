@@ -18,7 +18,7 @@ android {
 
     defaultConfig {
         applicationId = "com.sap.codelab"
-        minSdk = 27
+        minSdk = 29
         targetSdk = 37
         versionCode = 1
         versionName = "0.0.0"

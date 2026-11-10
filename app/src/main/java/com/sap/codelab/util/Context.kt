@@ -18,8 +18,7 @@ internal fun Context.isPermissionGranted(permission: String) =
  *         or not required (below API Level 29, Android Q), `false` otherwise.
  */
 internal fun Context.hasBackgroundLocationPermission() =
-    !isSdkAtLeast(Build.VERSION_CODES.Q) ||
-            isPermissionGranted(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+    isPermissionGranted(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
 
 /**
  * @return `true` if the required Geofencing permissions are granted, `false` otherwise.
