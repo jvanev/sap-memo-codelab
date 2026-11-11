@@ -84,4 +84,6 @@ private fun Intent.addTriggeredGeofenceToBackStack(backStack: NavBackStack<NavKe
             backStack.add(memoKey)
         }
     }
+
+    removeExtra(SAPMemo.INTENT_EXTRA_MEMO_ID)
 }

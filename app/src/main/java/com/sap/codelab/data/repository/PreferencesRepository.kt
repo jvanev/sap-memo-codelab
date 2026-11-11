@@ -13,7 +13,17 @@ interface PreferencesRepository {
     fun getPreferences(): Flow<UserPreferences>
 
     /**
-     * Updates the stored user preferences with the values specified in [preferences].
+     * Disables [UserPreferences.allowsFineLocationRequests].
      */
-    suspend fun updatePreferences(preferences: UserPreferences)
+    suspend fun denyFineLocationRequests()
+
+    /**
+     * Disables [UserPreferences.allowsBackgroundLocationRequests]
+     */
+    suspend fun denyBackgroundLocationRequests()
+
+    /**
+     * Disables [UserPreferences.allowsNotificationRequests]
+     */
+    suspend fun denyNotificationRequests()
 }

@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.preferencesDataStore
 import com.sap.codelab.data.model.UserPreferences
 import com.sap.codelab.data.repository.PreferencesRepository
@@ -28,13 +29,21 @@ object PreferencesRepositoryImpl : PreferencesRepository {
         )
     }
 
-    override suspend fun updatePreferences(preferences: UserPreferences) {
-        appContext.dataStore.updateData {
-            it.toMutablePreferences().also { prefs ->
-                prefs[fineLocationPreference] = preferences.allowsFineLocationRequests
-                prefs[backgroundLocationPreference] = preferences.allowsBackgroundLocationRequests
-                prefs[notificationPreference] = preferences.allowsNotificationRequests
-            }
+    override suspend fun denyFineLocationRequests() {
+        appContext.dataStore.edit {
+            it[fineLocationPreference] = false
+        }
+    }
+
+    override suspend fun denyBackgroundLocationRequests() {
+        appContext.dataStore.edit {
+            it[backgroundLocationPreference] = false
+        }
+    }
+
+    override suspend fun denyNotificationRequests() {
+        appContext.dataStore.edit {
+            it[notificationPreference] = false
         }
     }
 

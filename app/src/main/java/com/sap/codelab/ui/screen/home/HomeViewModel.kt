@@ -82,7 +82,7 @@ class HomeViewModel(
      */
     fun removeMemo(memo: Memo) {
         viewModelScope.launch {
-            memoRepository.saveMemo(memo.copy(isRemoved = true))
+            memoRepository.saveMemo(memo.copy(isDone = true, isRemoved = true))
             geofenceRepository.removeGeofence(memo)
             undoableAction.update { UndoableMemoAction.Remove(memo) }
         }
@@ -95,7 +95,7 @@ class HomeViewModel(
         undoableAction.value?.let { undoneAction ->
             viewModelScope.launch {
                 memoRepository.saveMemos(undoneAction.memos)
-                geofenceRepository.addGeofences(undoneAction.memos)
+                geofenceRepository.addGeofences(undoneAction.memos.filter { !it.isDone })
                 undoableAction.update { action ->
                     if (action == undoneAction) {
                         when (action) {
@@ -129,8 +129,7 @@ class HomeViewModel(
      */
     fun denyFineLocationPermission() {
         viewModelScope.launch {
-            val prefs = uiState.value.preferences.copy(allowsFineLocationRequests = false)
-            preferencesRepository.updatePreferences(prefs)
+            preferencesRepository.denyFineLocationRequests()
         }
     }
 
@@ -139,8 +138,7 @@ class HomeViewModel(
      */
     fun denyBackgroundLocationPermission() {
         viewModelScope.launch {
-            val prefs = uiState.value.preferences.copy(allowsBackgroundLocationRequests = false)
-            preferencesRepository.updatePreferences(prefs)
+            preferencesRepository.denyBackgroundLocationRequests()
         }
     }
 
@@ -149,8 +147,7 @@ class HomeViewModel(
      */
     fun denyNotificationPermission() {
         viewModelScope.launch {
-            val prefs = uiState.value.preferences.copy(allowsNotificationRequests = false)
-            preferencesRepository.updatePreferences(prefs)
+            preferencesRepository.denyNotificationRequests()
         }
     }
 }

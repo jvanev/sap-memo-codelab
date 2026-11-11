@@ -61,7 +61,11 @@ class MemoViewModel(
         if (memo.isValid) {
             viewModelScope.launch {
                 val memoId = memoRepository.saveMemo(memo)
-                geofenceRepository.addGeofence(memo.copy(id = memoId))
+
+                if (!memo.isDone) {
+                    geofenceRepository.addGeofence(memo.copy(id = memoId))
+                }
+
                 _uiState.update { it.copy(isSaved = true) }
             }
         }

@@ -23,7 +23,7 @@ data class Memo(
      * Whether this memo's data is valid.
      */
     val isValid
-        get() = title.isNotEmpty() && description.isNotEmpty() && isValidReminderPosition
+        get() = title.isNotBlank() && description.isNotBlank() && isValidReminderPosition
 
     /**
      * Whether this memo's coordinates are valid.
