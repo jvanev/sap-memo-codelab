@@ -2,7 +2,9 @@ package com.sap.codelab.ui.screen.memo
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.sap.codelab.data.repository.GeofenceRepository
 import com.sap.codelab.data.repository.MemoRepository
+import com.sap.codelab.data.repository.impl.GeofenceRepositoryImpl
 import com.sap.codelab.data.repository.impl.MemoRepositoryImpl
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -17,6 +19,7 @@ import kotlinx.coroutines.launch
  */
 class MemoViewModel(
     private val memoRepository: MemoRepository = MemoRepositoryImpl,
+    private val geofenceRepository: GeofenceRepository = GeofenceRepositoryImpl,
     launchMode: MemoLaunchMode,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(MemoUiState())
@@ -57,7 +60,8 @@ class MemoViewModel(
 
         if (memo.isValid) {
             viewModelScope.launch {
-                memoRepository.saveMemo(memo)
+                val memoId = memoRepository.saveMemo(memo)
+                geofenceRepository.addGeofence(memo.copy(id = memoId))
                 _uiState.update { it.copy(isSaved = true) }
             }
         }

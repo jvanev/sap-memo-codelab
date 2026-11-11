@@ -26,7 +26,9 @@ object MemoRepositoryImpl : MemoRepository {
             throw IllegalStateException("An invalid memo reached the repository layer: $memo")
         }
 
-        return database.memoDao().upsert(memo)
+        val memoId = database.memoDao().upsert(memo)
+
+        return if (memoId == -1L) memo.id else memoId
     }
 
     override suspend fun saveMemos(memos: List<Memo>) {

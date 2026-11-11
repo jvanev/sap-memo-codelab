@@ -3,7 +3,9 @@ package com.sap.codelab.ui.screen.home
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sap.codelab.data.model.Memo
+import com.sap.codelab.data.repository.GeofenceRepository
 import com.sap.codelab.data.repository.MemoRepository
+import com.sap.codelab.data.repository.impl.GeofenceRepositoryImpl
 import com.sap.codelab.data.repository.impl.MemoRepositoryImpl
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,7 +25,9 @@ import kotlin.time.Duration.Companion.seconds
  */
 class HomeViewModel(
     private val memoRepository: MemoRepository = MemoRepositoryImpl,
+    private val geofenceRepository: GeofenceRepository = GeofenceRepositoryImpl,
 ) : ViewModel() {
+
     private val showAllMemos = MutableStateFlow(false)
     private val undoableAction = MutableStateFlow<UndoableMemoAction?>(null)
 
@@ -56,6 +60,7 @@ class HomeViewModel(
     fun closeMemo(memo: Memo) {
         viewModelScope.launch {
             memoRepository.saveMemo(memo.copy(isDone = true))
+            geofenceRepository.removeGeofence(memo)
             undoableAction.update { UndoableMemoAction.Close(memo) }
         }
     }
@@ -66,6 +71,7 @@ class HomeViewModel(
     fun removeMemo(memo: Memo) {
         viewModelScope.launch {
             memoRepository.saveMemo(memo.copy(isRemoved = true))
+            geofenceRepository.removeGeofence(memo)
             undoableAction.update { UndoableMemoAction.Remove(memo) }
         }
     }
@@ -77,6 +83,7 @@ class HomeViewModel(
         undoableAction.value?.let { undoneAction ->
             viewModelScope.launch {
                 memoRepository.saveMemos(undoneAction.memos)
+                geofenceRepository.addGeofences(undoneAction.memos)
                 undoableAction.update { action ->
                     if (action == undoneAction) {
                         when (action) {
