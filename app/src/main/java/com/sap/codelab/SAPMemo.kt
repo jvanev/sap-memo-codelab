@@ -5,12 +5,14 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import com.sap.codelab.data.repository.impl.GeofenceRepositoryImpl
 import com.sap.codelab.data.repository.impl.MemoRepositoryImpl
+import com.sap.codelab.data.repository.impl.PreferencesRepositoryImpl
 
 class SAPMemo : Application() {
     override fun onCreate() {
         super.onCreate()
         GeofenceRepositoryImpl.initialize(this)
         MemoRepositoryImpl.initialize(this)
+        PreferencesRepositoryImpl.initialize(this)
 
         getSystemService(NotificationManager::class.java)
             .createNotificationChannel(
