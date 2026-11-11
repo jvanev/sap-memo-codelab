@@ -22,4 +22,20 @@
     <string name="memo_description_missing">Enter a description for your memo</string>
     <string name="memo_location_missing">Select a location for your memo</string>
     <string name="notification_channel_name">Memo</string>
+    <string name="allow_permission">ALLOW</string>
+    <string name="deny_permission">DENY</string>
+    <string name="foreground_location">Foreground Location</string>
+    <string name="foreground_location_rationale">
+        SAP Memo needs to access the device\'s location service in order to determine if
+        your memos are nearby
+    </string>
+    <string name="background_location">Background Location</string>
+    <string name="background_location_rationale">
+        SAP Memo needs to access the device\'s location service in order to determine if
+        your memos are nearby, even if the application is not currently open
+    </string>
+    <string name="notifications">Notifications</string>
+    <string name="notifications_rationale">
+        SAP Memo needs your permission to send you notifications about nearby memos
+    </string>
 </resources>

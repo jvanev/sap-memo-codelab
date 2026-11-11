@@ -1,11 +1,14 @@
 package com.sap.codelab.ui.screen.home
 
 import com.sap.codelab.data.model.Memo
+import com.sap.codelab.data.model.UserPreferences
 
 /**
  * Represents the current state of the home screen.
  */
 data class HomeUiState(
+    val preferences: UserPreferences = UserPreferences(),
+
     /**
      * The list of memos displayed on the screen.
      */

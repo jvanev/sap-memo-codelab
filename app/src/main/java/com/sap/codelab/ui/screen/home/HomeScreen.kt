@@ -49,6 +49,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.sap.codelab.R
 import com.sap.codelab.data.model.Memo
+import com.sap.codelab.ui.component.PermissionRequester
 import com.sap.codelab.ui.component.SAPMemoTopAppBar
 import com.sap.codelab.ui.screen.memo.MemoLaunchMode
 import com.sap.codelab.ui.theme.DarkGreen
@@ -77,6 +78,14 @@ fun HomeScreen(viewModel: HomeViewModel, onNavigateToMemo: (MemoLaunchMode) -> U
         onRemoveMemo = viewModel::removeMemo,
         onUndoAction = viewModel::undoAction,
         onClearAction = viewModel::clearAction,
+    )
+    PermissionRequester(
+        fineLocationRequestAllowed = uiState.preferences.allowsFineLocationRequests,
+        onFineLocationRequestSuppress = viewModel::denyFineLocationPermission,
+        backgroundLocationRequestAllowed = uiState.preferences.allowsBackgroundLocationRequests,
+        onBackgroundLocationRequestSuppress = viewModel::denyBackgroundLocationPermission,
+        notificationRequestAllowed = uiState.preferences.allowsNotificationRequests,
+        onNotificationRequestSuppress = viewModel::denyNotificationPermission,
     )
 }
 

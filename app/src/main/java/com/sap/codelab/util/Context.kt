@@ -14,11 +14,18 @@ internal fun Context.isPermissionGranted(permission: String) =
     checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED
 
 /**
+ * @return `true` if `android.permission.ACCESS_FINE_LOCATION` is granted, `false` otherwise.
+ */
+internal fun Context.hasForegroundLocationPermission() =
+    isPermissionGranted(Manifest.permission.ACCESS_FINE_LOCATION)
+
+/**
  * @return `true` if `android.permission.ACCESS_BACKGROUND_LOCATION` is granted
  *         or not required (below API Level 29, Android Q), `false` otherwise.
  */
 internal fun Context.hasBackgroundLocationPermission() =
-    isPermissionGranted(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+    isSdkAtLeast(Build.VERSION_CODES.Q) &&
+            isPermissionGranted("android.permission.ACCESS_BACKGROUND_LOCATION")
 
 /**
  * @return `true` if the required Geofencing permissions are granted, `false` otherwise.
@@ -33,7 +40,7 @@ internal fun Context.hasGeofencingPermissions() =
  */
 internal fun Context.hasNotificationPermission() =
     !isSdkAtLeast(Build.VERSION_CODES.TIRAMISU) ||
-            isPermissionGranted(Manifest.permission.POST_NOTIFICATIONS)
+            isPermissionGranted("android.permission.POST_NOTIFICATIONS")
 
 /**
  * @return `true` if the Google Play Services are available on the device;

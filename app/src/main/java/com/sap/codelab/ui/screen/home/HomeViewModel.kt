@@ -5,16 +5,18 @@ import androidx.lifecycle.viewModelScope
 import com.sap.codelab.data.model.Memo
 import com.sap.codelab.data.repository.GeofenceRepository
 import com.sap.codelab.data.repository.MemoRepository
+import com.sap.codelab.data.repository.PreferencesRepository
 import com.sap.codelab.data.repository.impl.GeofenceRepositoryImpl
 import com.sap.codelab.data.repository.impl.MemoRepositoryImpl
+import com.sap.codelab.data.repository.impl.PreferencesRepositoryImpl
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.WhileSubscribed
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -26,26 +28,36 @@ import kotlin.time.Duration.Companion.seconds
 class HomeViewModel(
     private val memoRepository: MemoRepository = MemoRepositoryImpl,
     private val geofenceRepository: GeofenceRepository = GeofenceRepositoryImpl,
+    private val preferencesRepository: PreferencesRepository = PreferencesRepositoryImpl,
 ) : ViewModel() {
 
     private val showAllMemos = MutableStateFlow(false)
     private val undoableAction = MutableStateFlow<UndoableMemoAction?>(null)
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val uiState: StateFlow<HomeUiState> = showAllMemos
+    private val memos: Flow<List<Memo>> = showAllMemos
         .flatMapLatest { showsAllMemos ->
-            val memosFlow = if (showsAllMemos) {
+            if (showsAllMemos) {
                 memoRepository.getAllMemos()
             } else {
                 memoRepository.getOpenMemos()
             }
+        }
 
-            memosFlow.map { memos -> HomeUiState(memos = memos, showsAllMemos = showsAllMemos) }
-        }
-        .combine(undoableAction) { uiState, undoableAction ->
-            uiState.copy(undoableAction = undoableAction)
-        }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5.seconds), HomeUiState())
+    val uiState: StateFlow<HomeUiState> = combine(
+        flow = preferencesRepository.getPreferences(),
+        flow2 = memos,
+        flow3 = showAllMemos,
+        flow4 = undoableAction,
+    ) { preferences, memos, showsAllMemos, undoableAction ->
+
+        HomeUiState(
+            preferences = preferences,
+            memos = memos,
+            showsAllMemos = showsAllMemos,
+            undoableAction = undoableAction,
+        )
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5.seconds), HomeUiState())
 
     /**
      * Toggles between all/open memos list.
@@ -110,5 +122,35 @@ class HomeViewModel(
      */
     fun clearAction() {
         undoableAction.update { null }
+    }
+
+    /**
+     * Stores the user's request not to see prompts for foreground location permission.
+     */
+    fun denyFineLocationPermission() {
+        viewModelScope.launch {
+            val prefs = uiState.value.preferences.copy(allowsFineLocationRequests = false)
+            preferencesRepository.updatePreferences(prefs)
+        }
+    }
+
+    /**
+     * Stores the user's request not to see prompts for background location permission.
+     */
+    fun denyBackgroundLocationPermission() {
+        viewModelScope.launch {
+            val prefs = uiState.value.preferences.copy(allowsBackgroundLocationRequests = false)
+            preferencesRepository.updatePreferences(prefs)
+        }
+    }
+
+    /**
+     * Stores the user's request not to see prompts for notifications permission.
+     */
+    fun denyNotificationPermission() {
+        viewModelScope.launch {
+            val prefs = uiState.value.preferences.copy(allowsNotificationRequests = false)
+            preferencesRepository.updatePreferences(prefs)
+        }
     }
 }

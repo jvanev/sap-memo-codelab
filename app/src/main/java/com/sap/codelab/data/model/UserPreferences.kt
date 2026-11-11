@@ -7,15 +7,15 @@ data class UserPreferences(
     /**
      * The user allows fine location permission to be requested.
      */
-    val allowsFineLocationRequests: Boolean,
+    val allowsFineLocationRequests: Boolean = false,
 
     /**
      * The user allows background location permission to be requested.
      */
-    val allowsBackgroundLocationRequests: Boolean,
+    val allowsBackgroundLocationRequests: Boolean = false,
 
     /**
      * The user allows notification permission to be requested.
      */
-    val allowsNotificationRequests: Boolean,
+    val allowsNotificationRequests: Boolean = false,
 )
